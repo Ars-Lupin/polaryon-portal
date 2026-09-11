@@ -1,0 +1,28 @@
+# Dependências
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+
+# Build / cache
+frontend/.next/
+backend/dist/
+backend/tsconfig.tsbuildinfo
+*.tsbuildinfo
+
+# Variáveis de ambiente (contêm segredos: JWT_SECRET, senha de app SMTP etc.)
+.env
+.env.*
+!.env.example
+
+# "Banco de dados" em CSV (dados de execução local, incluindo hash de senha do admin seed)
+backend/data/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

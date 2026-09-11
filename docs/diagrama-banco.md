@@ -1,0 +1,61 @@
+# Modelo de dados usado no CSV
+
+Baseado no diagrama enviado.
+
+## Tabelas
+
+### ACESSO_USUARIO
+
+- USU_ID
+- USU_NOME
+- USU_TELEFONE
+- USU_ACESSO
+- USU_EMAIL
+- USU_SENHA_HASH
+- USU_ATIVO
+
+### ACESSO_EMPRESA
+
+- EMP_ID
+- EMP_NOME
+- EMP_EMAIL
+
+### ACESSO_PAPEL
+
+- PAP_ID
+- PAP_NOME
+- PAP_DESCRICAO
+
+### ACESSO_PERMISSAO
+
+- PRM_ID
+- PRM_NOME
+- PRM_DESCRICAO
+
+### ACESSO_USU_EMP_PAP
+
+- UEP_ID
+- USU_ID
+- EMP_ID
+- PAP_ID
+
+> Removidos: UEP_ATRIBUIDO_POR e UEP_DATA_ATRIBUICAO.
+
+### ACESSO_PAP_PRM
+
+- PPE_ID
+- PRM_ID
+- PAP_ID
+
+> Removidos: PEP_ATRIBUIDO_POR e PPE_DATA_ATRIBUICAO.
+
+### NOTIFICACAO
+
+Tabela extra para simular notificações do navegador.
+
+- NTF_ID
+- USU_ID
+- NTF_TITULO
+- NTF_MENSAGEM
+- NTF_LIDA
+- NTF_DATA

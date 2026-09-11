@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Polaryon">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="40%" r="70%">
+      <stop offset="0" stop-color="#1238ff"/>
+      <stop offset="0.55" stop-color="#071572"/>
+      <stop offset="1" stop-color="#040b38"/>
+    </radialGradient>
+    <linearGradient id="star" x1="30" y1="12" x2="92" y2="118" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#eaf8ff"/>
+      <stop offset=".42" stop-color="#89d7f7"/>
+      <stop offset="1" stop-color="#1f4fff"/>
+    </linearGradient>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="128" height="128" rx="30" fill="url(#bg)"/>
+  <ellipse cx="64" cy="66" rx="48" ry="18" fill="none" stroke="#5f86ff" stroke-width="4" stroke-linecap="round" stroke-dasharray="70 26" transform="rotate(-17 64 66)" opacity=".95"/>
+  <ellipse cx="64" cy="66" rx="42" ry="16" fill="none" stroke="#89d7f7" stroke-width="2" stroke-dasharray="10 8" transform="rotate(28 64 66)" opacity=".55"/>
+  <path filter="url(#glow)" fill="url(#star)" d="M64 14c6 32 10 42 34 48-24 5-28 14-34 52-6-38-10-47-34-52 24-6 28-16 34-48Z"/>
+  <circle cx="29" cy="72" r="4" fill="#2fffd2"/>
+  <circle cx="101" cy="50" r="4" fill="#eaf8ff"/>
+</svg>

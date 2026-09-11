@@ -1,0 +1,553 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-main: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+  --transition: 220ms ease;
+
+  --accent: #3441e8;
+  --accent-2: #2f63e0;
+  --accent-dark: #07005d;
+  --accent-soft: #e8eaff;
+  --accent-contrast: #ffffff;
+  --accent-readable: #3441e8;
+
+  --company-primary: var(--accent-dark);
+  --company-secondary: var(--accent);
+  --company-accent: var(--accent-2);
+  --company-soft: var(--accent-soft);
+  --company-ring: color-mix(in srgb, var(--accent) 34%, transparent);
+
+  --login-star: rgba(255, 255, 255, 0.45);
+  --login-star-soft: rgba(255, 255, 255, 0.18);
+  --login-star-shine: rgba(255, 255, 255, 0.75);
+}
+
+/* =========================
+   TEMA ESCURO
+========================= */
+html[data-theme="dark"] {
+  --page-bg-1: #030b18;
+  --page-bg-2: #08172a;
+
+  --surface: rgba(7, 15, 27, 0.88);
+  --surface-border: rgba(255, 255, 255, 0.09);
+
+  --text: #f5f9ff;
+  --wordmark: #f7fbff;
+  --tagline: #aab8ca;
+
+  --const-line: rgba(180, 215, 235, 0.46);
+  --const-star: #eef8ff;
+  --const-polaris: #ffffff;
+
+  --ring-soft: rgba(255, 255, 255, 0.22);
+  --detail-soft: rgba(255, 255, 255, 0.16);
+
+  --star-1: #d9f3ff;
+  --star-2: #89d7f7;
+  --star-3: #2f9fd2;
+  --star-4: #1b6b95;
+
+  --aurora-1: rgba(0, 236, 174, 0.38);
+  --aurora-2: rgba(0, 190, 255, 0.30);
+  --aurora-3: rgba(116, 92, 255, 0.24);
+  --aurora-4: rgba(255, 255, 255, 0.06);
+  --aurora-fade: rgba(0, 0, 0, 0);
+  --aurora-opacity: 0.95;
+
+  --card-shadow: rgba(0, 0, 0, 0.42);
+  --btn-bg: rgba(255, 255, 255, 0.08);
+  --btn-hover: rgba(255, 255, 255, 0.14);
+
+  --login-star: rgba(255, 255, 255, 0.42);
+  --login-star-soft: rgba(255, 255, 255, 0.16);
+  --login-star-shine: rgba(255, 255, 255, 0.82);
+}
+
+/* Compatibilidade caso algum componente use classe .dark */
+.dark {
+  --page-bg-1: #030b18;
+  --page-bg-2: #08172a;
+
+  --surface: rgba(7, 15, 27, 0.88);
+  --surface-border: rgba(255, 255, 255, 0.09);
+
+  --text: #f5f9ff;
+  --wordmark: #f7fbff;
+  --tagline: #aab8ca;
+
+  --card-shadow: rgba(0, 0, 0, 0.42);
+}
+
+/* =========================
+   TEMA CLARO
+========================= */
+html[data-theme="light"] {
+  --page-bg-1: #dfeef3;
+  --page-bg-2: #f7fbfd;
+
+  --surface: rgba(255, 255, 255, 0.78);
+  --surface-border: rgba(18, 48, 66, 0.13);
+
+  --text: #102333;
+  --wordmark: #07172a;
+  --tagline: #556f80;
+
+  --const-line: rgba(50, 88, 108, 0.48);
+  --const-star: #2f5f78;
+  --const-polaris: #123d57;
+
+  --ring-soft: rgba(15, 49, 67, 0.20);
+  --detail-soft: rgba(15, 49, 67, 0.16);
+
+  --star-1: #8fd0eb;
+  --star-2: #54a9d5;
+  --star-3: #226f9c;
+  --star-4: #0f4568;
+
+  --aurora-1: rgba(67, 224, 201, 0.36);
+  --aurora-2: rgba(68, 167, 255, 0.28);
+  --aurora-3: rgba(164, 130, 255, 0.22);
+  --aurora-4: rgba(255, 255, 255, 0.18);
+  --aurora-fade: rgba(255, 255, 255, 0);
+  --aurora-opacity: 1;
+
+  --card-shadow: rgba(18, 42, 58, 0.15);
+  --btn-bg: rgba(18, 48, 66, 0.06);
+  --btn-hover: rgba(18, 48, 66, 0.12);
+
+  --login-star: rgba(22, 54, 78, 0.32);
+  --login-star-soft: rgba(22, 54, 78, 0.14);
+  --login-star-shine: rgba(29, 78, 216, 0.35);
+}
+
+/* =========================
+   EMPRESAS
+========================= */
+html[data-company="macroex"] {
+  --accent: #3441e8;
+  --accent-2: #2f63e0;
+  --accent-dark: #07005d;
+  --accent-soft: #e8eaff;
+  --accent-contrast: #ffffff;
+  --accent-readable: #3441e8;
+
+  --company-primary: #07005d;
+  --company-secondary: #3441e8;
+  --company-accent: #2f63e0;
+  --company-soft: #e8eaff;
+  --company-ring: rgba(52, 65, 232, 0.34);
+}
+
+html[data-company="atmos"] {
+  --accent: #f47c2c;
+  --accent-2: #ff995c;
+  --accent-dark: #8d4719;
+  --accent-soft: #fff0e6;
+  --accent-contrast: #ffffff;
+  --accent-readable: #d95e16;
+
+  --company-primary: #8d4719;
+  --company-secondary: #f47c2c;
+  --company-accent: #ff995c;
+  --company-soft: #fff0e6;
+  --company-ring: rgba(244, 124, 44, 0.34);
+}
+
+html[data-company="actus"] {
+  --accent: #1f6f91;
+  --accent-2: #2d88ab;
+  --accent-dark: #164f67;
+  --accent-soft: #e4f4f8;
+  --accent-contrast: #ffffff;
+  --accent-readable: #1f6f91;
+
+  --company-primary: #164f67;
+  --company-secondary: #1f6f91;
+  --company-accent: #2d88ab;
+  --company-soft: #e4f4f8;
+  --company-ring: rgba(31, 111, 145, 0.34);
+}
+
+html[data-company="kamell"] {
+  --accent: #f1c93b;
+  --accent-2: #e6db6d;
+  --accent-dark: #8d7609;
+  --accent-soft: #fff8c9;
+  --accent-contrast: #111111;
+  --accent-readable: #9b7b00;
+
+  --company-primary: #8d7609;
+  --company-secondary: #f1c93b;
+  --company-accent: #e6db6d;
+  --company-soft: #fff8c9;
+  --company-ring: rgba(241, 201, 59, 0.38);
+}
+
+html[data-company="tohatsu"] {
+  --accent: #171932;
+  --accent-2: #202342;
+  --accent-dark: #0b0d1f;
+  --accent-soft: #f4f1f7;
+  --accent-contrast: #ffffff;
+  --accent-readable: #171932;
+
+  --company-primary: #0b0d1f;
+  --company-secondary: #171932;
+  --company-accent: #202342;
+  --company-soft: #f4f1f7;
+  --company-ring: rgba(23, 25, 50, 0.34);
+}
+
+/* Ajustes de leitura no tema escuro */
+html[data-theme="dark"][data-company="macroex"] {
+  --accent-readable: #7f9aff;
+  --company-soft: rgba(127, 154, 255, 0.15);
+  --company-ring: rgba(127, 154, 255, 0.34);
+}
+
+html[data-theme="dark"][data-company="atmos"] {
+  --accent-readable: #ffb17b;
+  --company-soft: rgba(255, 177, 123, 0.15);
+  --company-ring: rgba(255, 177, 123, 0.34);
+}
+
+html[data-theme="dark"][data-company="actus"] {
+  --accent-readable: #7bd5ee;
+  --company-soft: rgba(123, 213, 238, 0.15);
+  --company-ring: rgba(123, 213, 238, 0.34);
+}
+
+html[data-theme="dark"][data-company="kamell"] {
+  --accent-readable: #ffe070;
+  --company-soft: rgba(255, 224, 112, 0.15);
+  --company-ring: rgba(255, 224, 112, 0.34);
+}
+
+html[data-theme="dark"][data-company="tohatsu"] {
+  --accent-readable: #d8d8ef;
+  --company-soft: rgba(216, 216, 239, 0.14);
+  --company-ring: rgba(216, 216, 239, 0.30);
+}
+
+/* =========================
+   BASE
+========================= */
+html,
+body {
+  min-height: 100%;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-main);
+  color: var(--text);
+  background:
+    radial-gradient(circle at 16% 18%, color-mix(in srgb, var(--accent-2) 16%, transparent), transparent 34%),
+    radial-gradient(circle at 84% 72%, color-mix(in srgb, var(--accent) 13%, transparent), transparent 36%),
+    radial-gradient(circle at 50% 5%, color-mix(in srgb, var(--accent-soft) 18%, transparent), transparent 42%),
+    linear-gradient(160deg, var(--page-bg-1), var(--page-bg-2));
+  transition:
+    background var(--transition),
+    color var(--transition);
+}
+
+html[data-theme="dark"] body {
+  background:
+    radial-gradient(circle at 14% 8%, color-mix(in srgb, var(--accent-readable) 18%, transparent), transparent 34rem),
+    radial-gradient(circle at 86% 12%, rgba(56, 189, 248, 0.11), transparent 32rem),
+    radial-gradient(circle at 50% 90%, rgba(79, 70, 229, 0.11), transparent 36rem),
+    linear-gradient(145deg, #030813 0%, #06111f 48%, #081426 100%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* =========================
+   SCROLLBAR
+========================= */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(148, 163, 184, 0.15);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-2);
+}
+
+/* =========================
+   UTILITÁRIOS EXISTENTES
+========================= */
+.polaryon-surface {
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  box-shadow: 0 30px 90px var(--card-shadow);
+  backdrop-filter: blur(18px);
+}
+
+.polaryon-accent-button {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  transition:
+    transform var(--transition),
+    background var(--transition),
+    color var(--transition),
+    opacity var(--transition),
+    box-shadow var(--transition);
+}
+
+.polaryon-accent-button:hover {
+  transform: translateY(-1px);
+  background: var(--accent-2);
+  box-shadow: 0 18px 38px color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.polaryon-accent-text {
+  color: var(--accent-readable);
+}
+
+.polaryon-accent-border {
+  border-color: var(--accent);
+}
+
+.polaryon-focus {
+  outline: none;
+}
+
+.polaryon-focus:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+/* =========================
+   DASHBOARD / APP SHELL
+========================= */
+.app-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 16% 8%, color-mix(in srgb, var(--accent-2) 11%, transparent), transparent 34rem),
+    radial-gradient(circle at 86% 18%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 32rem),
+    radial-gradient(circle at 50% 100%, rgba(255, 255, 255, 0.72), transparent 34rem),
+    linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
+  transition:
+    background var(--transition),
+    color var(--transition);
+}
+
+html[data-theme="dark"] .app-shell {
+  background:
+    radial-gradient(circle at 12% 6%, color-mix(in srgb, var(--accent-readable) 20%, transparent), transparent 34rem),
+    radial-gradient(circle at 88% 8%, rgba(56, 189, 248, 0.12), transparent 32rem),
+    radial-gradient(circle at 52% 88%, rgba(99, 102, 241, 0.10), transparent 38rem),
+    linear-gradient(145deg, #030813 0%, #06111f 48%, #081426 100%);
+}
+
+.dark .app-shell {
+  background:
+    radial-gradient(circle at 12% 6%, color-mix(in srgb, var(--accent-readable) 20%, transparent), transparent 34rem),
+    radial-gradient(circle at 88% 8%, rgba(56, 189, 248, 0.12), transparent 32rem),
+    radial-gradient(circle at 52% 88%, rgba(99, 102, 241, 0.10), transparent 38rem),
+    linear-gradient(145deg, #030813 0%, #06111f 48%, #081426 100%);
+}
+
+.polaryon-card {
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(148, 163, 184, 0.26);
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.10);
+  backdrop-filter: blur(18px);
+}
+
+html[data-theme="dark"] .polaryon-card {
+  background: rgba(7, 15, 27, 0.78);
+  border-color: rgba(255, 255, 255, 0.10);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.34);
+}
+
+.dark .polaryon-card {
+  background: rgba(7, 15, 27, 0.78);
+  border-color: rgba(255, 255, 255, 0.10);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.34);
+}
+
+.polaryon-header {
+  background:
+    radial-gradient(circle at 12% 0%, color-mix(in srgb, var(--accent-readable) 18%, transparent), transparent 24rem),
+    linear-gradient(120deg, var(--company-primary), var(--company-secondary));
+  color: #ffffff;
+}
+
+.polaryon-footer {
+  background:
+    radial-gradient(circle at 88% 0%, color-mix(in srgb, var(--accent-readable) 14%, transparent), transparent 24rem),
+    linear-gradient(120deg, var(--company-primary), var(--company-secondary));
+  color: #ffffff;
+}
+
+.polaryon-sidebar {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(148, 163, 184, 0.28);
+  backdrop-filter: blur(18px);
+}
+
+html[data-theme="dark"] .polaryon-sidebar {
+  background: rgba(3, 10, 22, 0.74);
+  border-color: rgba(255, 255, 255, 0.09);
+}
+
+.dark .polaryon-sidebar {
+  background: rgba(3, 10, 22, 0.74);
+  border-color: rgba(255, 255, 255, 0.09);
+}
+
+.polaryon-menu-active {
+  background: var(--company-soft);
+  color: var(--accent-readable);
+  box-shadow: inset 0 0 0 1px var(--company-ring);
+}
+
+.polaryon-menu-item {
+  transition:
+    background var(--transition),
+    color var(--transition),
+    transform var(--transition);
+}
+
+.polaryon-menu-item:hover {
+  transform: translateX(1px);
+}
+
+/* =========================
+   QR CODE / AUTHENTICATOR
+========================= */
+.polaryon-qr-frame {
+  background: #ffffff;
+  box-shadow:
+    0 24px 70px rgba(15, 23, 42, 0.16),
+    inset 0 0 0 1px rgba(148, 163, 184, 0.18);
+}
+
+html[data-theme="dark"] .polaryon-qr-frame {
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.36),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.polaryon-logo-badge {
+  background:
+    radial-gradient(circle at 30% 20%, color-mix(in srgb, var(--accent-readable) 20%, transparent), transparent 42%),
+    linear-gradient(145deg, #07111f, #0b1530);
+  border: 6px solid #ffffff;
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.28);
+}
+
+/* =========================
+   FORMULÁRIOS
+========================= */
+input,
+select,
+textarea {
+  color: var(--text);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: color-mix(in srgb, var(--text) 48%, transparent);
+}
+
+select {
+  color: var(--text);
+}
+
+option {
+  color: #0f172a;
+}
+
+/* =========================
+   SELEÇÃO
+========================= */
+::selection {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+/* =========================
+   LOGO FIXA EM ÁREAS ESCURAS
+   Cabeçalho / Rodapé
+========================= */
+.polaryon-brand-lock {
+  --wordmark: #f7fbff;
+  --tagline: #aab8ca;
+
+  --const-line: rgba(180, 215, 235, 0.46);
+  --const-star: #eef8ff;
+  --const-polaris: #ffffff;
+
+  --ring-soft: rgba(255, 255, 255, 0.22);
+  --detail-soft: rgba(255, 255, 255, 0.16);
+
+  --star-1: #d9f3ff;
+  --star-2: #89d7f7;
+  --star-3: #2f9fd2;
+  --star-4: #1b6b95;
+
+  --login-star: rgba(255, 255, 255, 0.42);
+  --login-star-soft: rgba(255, 255, 255, 0.16);
+  --login-star-shine: rgba(255, 255, 255, 0.82);
+}
+
+.polaryon-brand-block {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 22px;
+  padding: 8px 14px;
+  background:
+    radial-gradient(circle at 25% 20%, rgba(56, 189, 248, 0.16), transparent 46%),
+    linear-gradient(135deg, rgba(2, 6, 23, 0.34), rgba(15, 23, 42, 0.18));
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    0 14px 34px rgba(0, 0, 0, 0.16);
+  backdrop-filter: blur(12px);
+}
+
+.polaryon-brand-block.compact {
+  padding: 6px 10px;
+  border-radius: 18px;
+}

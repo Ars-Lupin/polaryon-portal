@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Polaryon Logo SVG - Empresas</title>
+
+  <style>
+    :root {
+      --font-main: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+      --radius: 28px;
+      --transition: 220ms ease;
+    }
+
+    body[data-theme="dark"] {
+      --page-bg-1: #06101d;
+      --page-bg-2: #0b1728;
+      --surface: rgba(7, 15, 27, 0.94);
+      --surface-border: rgba(255, 255, 255, 0.08);
+
+      --text: #f5f9ff;
+      --wordmark: #f7fbff;
+      --tagline: #9aadc4;
+
+      --const-line: rgba(154, 205, 238, 0.36);
+      --const-star: #eaf8ff;
+      --const-polaris: #ffffff;
+
+      --ring-soft: rgba(255, 255, 255, 0.18);
+      --detail-soft: rgba(255, 255, 255, 0.12);
+
+      --star-1: #d2eefb;
+      --star-2: #89d7f7;
+      --star-3: #2f9fd2;
+      --star-4: #1b6b95;
+
+      --aurora-1: rgba(0, 236, 174, 0.50);
+      --aurora-2: rgba(0, 190, 255, 0.42);
+      --aurora-3: rgba(116, 92, 255, 0.34);
+      --aurora-fade: rgba(0, 0, 0, 0);
+      --aurora-opacity: 1;
+
+      --card-shadow: rgba(0, 0, 0, 0.44);
+      --btn-bg: rgba(255, 255, 255, 0.08);
+      --btn-hover: rgba(255, 255, 255, 0.14);
+    }
+
+    body[data-theme="light"] {
+      --page-bg-1: #eef5f4;
+      --page-bg-2: #fbfcfa;
+      --surface: rgba(255, 255, 255, 0.98);
+      --surface-border: rgba(18, 48, 66, 0.10);
+
+      --text: #102333;
+      --wordmark: #07172a;
+      --tagline: #607987;
+
+      --const-line: rgba(40, 89, 108, 0.35);
+      --const-star: #34667a;
+      --const-polaris: #0b344d;
+
+      --ring-soft: rgba(15, 49, 67, 0.14);
+      --detail-soft: rgba(15, 49, 67, 0.12);
+
+      --star-1: #76b5d2;
+      --star-2: #3b8ab4;
+      --star-3: #165f88;
+      --star-4: #0d3c5b;
+
+      --aurora-1: rgba(88, 246, 215, 0.42);
+      --aurora-2: rgba(88, 197, 255, 0.34);
+      --aurora-3: rgba(190, 158, 255, 0.28);
+      --aurora-fade: rgba(255, 255, 255, 0);
+      --aurora-opacity: 0.76;
+
+      --card-shadow: rgba(18, 42, 58, 0.13);
+      --btn-bg: rgba(18, 48, 66, 0.06);
+      --btn-hover: rgba(18, 48, 66, 0.12);
+    }
+
+    body[data-theme="dark"][data-company="macroex"] {
+      --accent: #1f4fff;
+      --accent-2: #5f86ff;
+      --accent-dark: #061a8f;
+    }
+
+    body[data-theme="light"][data-company="macroex"] {
+      --accent: #1d4ed8;
+      --accent-2: #3b63ff;
+      --accent-dark: #102a7a;
+    }
+
+    body[data-theme="dark"][data-company="actus"] {
+      --accent: #00cfe8;
+      --accent-2: #7cf6ff;
+      --accent-dark: #007185;
+    }
+
+    body[data-theme="light"][data-company="actus"] {
+      --accent: #008fa3;
+      --accent-2: #20c8d8;
+      --accent-dark: #005763;
+    }
+
+    body[data-theme="dark"][data-company="kamell"] {
+      --accent: #ffe600;
+      --accent-2: #fff36b;
+      --accent-dark: #b89f00;
+    }
+
+    body[data-theme="light"][data-company="kamell"] {
+      --accent: #d6bd00;
+      --accent-2: #ffea00;
+      --accent-dark: #8a7600;
+    }
+
+    body[data-theme="dark"][data-company="atmos"] {
+      --accent: #ff6a00;
+      --accent-2: #ffb347;
+      --accent-dark: #a53b00;
+    }
+
+    body[data-theme="light"][data-company="atmos"] {
+      --accent: #c76018;
+      --accent-2: #e8973f;
+      --accent-dark: #78360f;
+    }
+
+    body[data-theme="dark"][data-company="tohatsu"] {
+      --accent: #f8fafc;
+      --accent-2: #94a3b8;
+      --accent-dark: #334155;
+    }
+
+    body[data-theme="light"][data-company="tohatsu"] {
+      --accent: #111827;
+      --accent-2: #5b6472;
+      --accent-dark: #000000;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--font-main);
+      color: var(--text);
+      background:
+        radial-gradient(circle at 20% 20%, color-mix(in srgb, var(--accent-2) 12%, transparent), transparent 36%),
+        radial-gradient(circle at 82% 78%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 38%),
+        linear-gradient(160deg, var(--page-bg-1), var(--page-bg-2));
+      display: grid;
+      place-items: center;
+      padding: 32px;
+      transition: background var(--transition), color var(--transition);
+    }
+
+    .stage {
+      width: min(1180px, 100%);
+      display: grid;
+      gap: 24px;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      border-radius: 999px;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      box-shadow: 0 16px 40px var(--card-shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+      border-radius: 999px;
+      padding: 10px 16px;
+      font: 700 13px/1 var(--font-main);
+      color: var(--text);
+      background: var(--btn-bg);
+      transition: transform var(--transition), background var(--transition), color var(--transition);
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      background: var(--btn-hover);
+    }
+
+    button.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    body[data-company="kamell"] button.active,
+    body[data-theme="dark"][data-company="tohatsu"] button.active {
+      color: #111;
+    }
+
+    .logo-card {
+      min-height: 610px;
+      display: grid;
+      place-items: center;
+      padding: clamp(24px, 5vw, 72px);
+      border-radius: var(--radius);
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      box-shadow: 0 30px 90px var(--card-shadow);
+      overflow: hidden;
+    }
+
+    .logo-wrap {
+      width: min(1060px, 100%);
+    }
+
+    svg {
+      width: 100%;
+      height: auto;
+      display: block;
+      overflow: visible;
+    }
+
+    .word {
+      font-family: var(--font-main);
+      font-weight: 790;
+      letter-spacing: -3px;
+      fill: var(--wordmark);
+    }
+
+    .tagline {
+      font-family: var(--font-main);
+      font-weight: 700;
+      letter-spacing: 5px;
+      fill: var(--tagline);
+    }
+
+    @media (max-width: 800px) {
+      .logo-card {
+        min-height: 430px;
+      }
+
+      .word {
+        letter-spacing: -1.6px;
+      }
+
+      .tagline {
+        letter-spacing: 3px;
+      }
+    }
+  </style>
+</head>
+
+<body data-theme="dark" data-company="macroex">
+  <main class="stage">
+    <section class="controls">
+      <div class="control-group">
+        <button id="themeBtn">Tema claro</button>
+      </div>
+
+      <div class="control-group">
+        <button data-company="macroex" class="active">Macroex</button>
+        <button data-company="actus">Actus</button>
+        <button data-company="kamell">Kamell</button>
+        <button data-company="atmos">Atmos</button>
+        <button data-company="tohatsu">Tohatsu</button>
+      </div>
+    </section>
+
+    <section class="logo-card">
+      <div class="logo-wrap">
+        <svg
+          viewBox="0 0 1180 450"
+          role="img"
+          aria-labelledby="logoTitle logoDesc"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <title id="logoTitle">Polaryon</title>
+          <desc id="logoDesc">
+            Logo Polaryon com estrela polar cristalina, portal orbital, aurora boreal no símbolo e Ursa Menor acima do texto.
+          </desc>
+
+          <defs>
+            <linearGradient id="starGradient" x1="110" y1="90" x2="285" y2="320" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" style="stop-color:var(--star-1)" />
+              <stop offset="34%" style="stop-color:var(--star-2)" />
+              <stop offset="68%" style="stop-color:var(--star-3)" />
+              <stop offset="100%" style="stop-color:var(--star-4)" />
+            </linearGradient>
+
+            <linearGradient id="accentGradient" x1="45" y1="60" x2="300" y2="300" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" style="stop-color:var(--accent-2)" />
+              <stop offset="58%" style="stop-color:var(--accent)" />
+              <stop offset="100%" style="stop-color:var(--accent-dark)" />
+            </linearGradient>
+
+            <linearGradient id="wordAccent" x1="690" y1="190" x2="780" y2="295" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" style="stop-color:var(--accent-2)" />
+              <stop offset="100%" style="stop-color:var(--accent)" />
+            </linearGradient>
+
+            <linearGradient id="auroraSymbolA" x1="-140" y1="-80" x2="145" y2="70" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="var(--aurora-fade)" />
+              <stop offset="22%" stop-color="var(--aurora-1)" />
+              <stop offset="60%" stop-color="var(--aurora-2)" />
+              <stop offset="100%" stop-color="var(--aurora-fade)" />
+            </linearGradient>
+
+            <linearGradient id="auroraSymbolB" x1="-120" y1="-110" x2="140" y2="80" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="var(--aurora-fade)" />
+              <stop offset="35%" stop-color="var(--aurora-2)" />
+              <stop offset="76%" stop-color="var(--aurora-3)" />
+              <stop offset="100%" stop-color="var(--aurora-fade)" />
+            </linearGradient>
+
+            <clipPath id="portalClip">
+              <circle cx="0" cy="0" r="140" />
+            </clipPath>
+
+            <filter id="softShadow" x="-60%" y="-60%" width="240%" height="240%">
+              <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="rgba(0,0,0,0.18)" flood-opacity="1"/>
+            </filter>
+
+            <filter id="auroraBlur" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="11" />
+            </filter>
+
+            <filter id="starGlow" x="-80%" y="-80%" width="260%" height="260%">
+              <feGaussianBlur stdDeviation="2.6" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <symbol id="constStar" viewBox="-12 -12 24 24">
+              <path
+                d="M0 -12 L2.5 -2.5 L12 0 L2.5 2.5 L0 12 L-2.5 2.5 L-12 0 L-2.5 -2.5 Z"
+                fill="currentColor"
+              />
+            </symbol>
+
+            <symbol id="constStarSmall" viewBox="-10 -10 20 20">
+              <path
+                d="M0 -10 L2 -2 L10 0 L2 2 L0 10 L-2 2 L-10 0 L-2 -2 Z"
+                fill="currentColor"
+              />
+            </symbol>
+          </defs>
+
+          <!-- símbolo -->
+          <g transform="translate(210 255)" filter="url(#softShadow)">
+            <!-- aurora dentro do símbolo -->
+            <g clip-path="url(#portalClip)" filter="url(#auroraBlur)" opacity="var(--aurora-opacity)">
+              <path
+                d="M-150 -24 C-96 -78 -18 -66 44 -34 C94 -8 124 -14 158 -44
+                   L158 18 C104 54 42 46 -18 18 C-78 -10 -118 16 -150 54 Z"
+                fill="url(#auroraSymbolA)"
+              />
+
+              <path
+                d="M-132 -58 C-72 -100 18 -88 80 -48 C124 -22 146 -24 166 -42
+                   L166 10 C112 44 58 32 4 2 C-56 -32 -96 -12 -132 26 Z"
+                fill="url(#auroraSymbolB)"
+              />
+            </g>
+
+            <!-- portal externo -->
+            <circle
+              cx="0"
+              cy="0"
+              r="118"
+              fill="none"
+              stroke="var(--ring-soft)"
+              stroke-width="14"
+              stroke-linecap="round"
+              stroke-dasharray="230 95 72 90"
+              transform="rotate(-22)"
+            />
+
+            <circle
+              cx="0"
+              cy="0"
+              r="118"
+              fill="none"
+              stroke="url(#accentGradient)"
+              stroke-width="14"
+              stroke-linecap="round"
+              stroke-dasharray="150 278"
+              transform="rotate(18)"
+            />
+
+            <!-- portal orbital -->
+            <ellipse
+              cx="0"
+              cy="0"
+              rx="132"
+              ry="54"
+              fill="none"
+              stroke="var(--accent-2)"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-dasharray="115 54"
+              opacity="0.82"
+              transform="rotate(-18)"
+            />
+
+            <ellipse
+              cx="0"
+              cy="0"
+              rx="126"
+              ry="46"
+              fill="none"
+              stroke="var(--detail-soft)"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-dasharray="18 16"
+              opacity="0.8"
+              transform="rotate(28)"
+            />
+
+            <path
+              d="M-100 40 C-48 84 44 84 104 18"
+              fill="none"
+              stroke="var(--accent-2)"
+              stroke-width="3.2"
+              stroke-linecap="round"
+              stroke-dasharray="1 12"
+              opacity="0.95"
+            />
+
+            <circle cx="-96" cy="44" r="7.2" fill="var(--accent)" />
+            <circle cx="104" cy="-24" r="7.2" fill="var(--accent-2)" />
+            <circle cx="80" cy="65" r="5.8" fill="var(--detail-soft)" />
+
+            <!-- estrela cristalina -->
+            <g>
+              <path
+                d="
+                  M0 -135
+                  C13 -56 20 -24 82 -10
+                  C34 -2 18 10 122 0
+                  C18 14 10 42 0 136
+                  C-10 42 -18 14 -122 0
+                  C-18 -10 -34 -2 -82 -10
+                  C-20 -24 -13 -56 0 -135
+                  Z"
+                fill="url(#starGradient)"
+              />
+
+              <path d="M0 -116 L0 -12 L42 -12 Z" fill="#ffffff" opacity="0.18" />
+              <path d="M0 -12 L86 -2 L26 16 Z" fill="#d9f3ff" opacity="0.22" />
+              <path d="M0 -12 L-86 -2 L-26 16 Z" fill="#ffffff" opacity="0.12" />
+              <path d="M0 -12 L0 114 L-26 22 Z" fill="#0f4d70" opacity="0.22" />
+              <path d="M0 -12 L0 114 L28 18 Z" fill="#ffffff" opacity="0.10" />
+              <path d="M0 -42 L25 -8 L0 28 L-25 -8 Z" fill="#ffffff" opacity="0.12" />
+
+              <path
+                d="M0 -135 L0 -160"
+                stroke="var(--accent-2)"
+                stroke-width="3.4"
+                stroke-linecap="round"
+              />
+            </g>
+          </g>
+
+          <!-- constelação menor e mais próxima do texto -->
+          <g transform="translate(555 108) scale(0.82)">
+            <path
+              d="M0 72 L80 50 L165 62 L245 88"
+              fill="none"
+              stroke="var(--const-line)"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+
+            <path
+              d="M245 88 L325 48 L392 105 L300 142 L245 88"
+              fill="none"
+              stroke="var(--const-line)"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+
+            <g color="var(--const-polaris)" filter="url(#starGlow)">
+              <use href="#constStar" x="0" y="72" width="22" height="22" transform="translate(-11 -11)" />
+            </g>
+
+            <g color="var(--const-star)" filter="url(#starGlow)">
+              <use href="#constStarSmall" x="80" y="50" width="16" height="16" transform="translate(-8 -8)" />
+              <use href="#constStarSmall" x="165" y="62" width="15" height="15" transform="translate(-7.5 -7.5)" />
+              <use href="#constStarSmall" x="245" y="88" width="16" height="16" transform="translate(-8 -8)" />
+              <use href="#constStarSmall" x="325" y="48" width="18" height="18" transform="translate(-9 -9)" />
+              <use href="#constStarSmall" x="392" y="105" width="16" height="16" transform="translate(-8 -8)" />
+              <use href="#constStarSmall" x="300" y="142" width="17" height="17" transform="translate(-8.5 -8.5)" />
+            </g>
+          </g>
+
+          <!-- wordmark -->
+          <g transform="translate(395 0)">
+            <text x="0" y="292" font-size="104" class="word">
+              <tspan>Polar</tspan><tspan fill="url(#wordAccent)">y</tspan><tspan>on</tspan>
+            </text>
+
+            <text x="10" y="342" font-size="17" class="tagline">
+              PORTAL DE PARCEIROS
+            </text>
+
+            <path
+              d="M10 367 H495"
+              stroke="var(--ring-soft)"
+              stroke-width="1.8"
+              stroke-linecap="round"
+            />
+
+            <path
+              d="M10 367 H170"
+              stroke="var(--accent)"
+              stroke-width="3.6"
+              stroke-linecap="round"
+            />
+
+            <path
+              d="M490 367 L474 359 M490 367 L474 375"
+              fill="none"
+              stroke="var(--accent-2)"
+              stroke-width="2.9"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </g>
+        </svg>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const body = document.body;
+    const themeBtn = document.getElementById("themeBtn");
+    const companyButtons = document.querySelectorAll("[data-company]");
+
+    function updateThemeButton() {
+      themeBtn.textContent = body.dataset.theme === "dark" ? "Tema claro" : "Tema escuro";
+    }
+
+    themeBtn.addEventListener("click", () => {
+      body.dataset.theme = body.dataset.theme === "dark" ? "light" : "dark";
+      updateThemeButton();
+    });
+
+    companyButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        body.dataset.company = button.dataset.company;
+        companyButtons.forEach((btn) => btn.classList.remove("active"));
+        button.classList.add("active");
+      });
+    });
+
+    updateThemeButton();
+  </script>
+</body>
+</html>
