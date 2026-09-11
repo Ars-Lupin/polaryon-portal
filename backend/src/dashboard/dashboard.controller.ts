@@ -1,7 +1,7 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RequestWithUser } from '../auth/auth.types';
-import { DashboardService } from './dashboard.service';
+import { DashboardService, PaginationQuery } from './dashboard.service';
 
 @UseGuards(JwtAuthGuard)
 @Controller()
@@ -14,8 +14,8 @@ export class DashboardController {
   }
 
   @Get('usuarios')
-  usuarios(@Req() req: RequestWithUser) {
-    return this.dashboardService.usuarios(req.user);
+  usuarios(@Req() req: RequestWithUser, @Query() query: PaginationQuery) {
+    return this.dashboardService.usuarios(req.user, query);
   }
 
   @Post('usuarios')
@@ -24,8 +24,8 @@ export class DashboardController {
   }
 
   @Get('empresas')
-  empresas(@Req() req: RequestWithUser) {
-    return this.dashboardService.empresas(req.user);
+  empresas(@Req() req: RequestWithUser, @Query() query: PaginationQuery) {
+    return this.dashboardService.empresas(req.user, query);
   }
 
   @Post('empresas')

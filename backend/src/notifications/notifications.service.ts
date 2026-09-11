@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import { CsvDatabaseService } from '../csv-database/csv-database.service';
+import { DatabaseService } from '../database/database.service';
 
 type Notificacao = {
   NTF_ID: string;
@@ -13,21 +13,21 @@ type Notificacao = {
 
 @Injectable()
 export class NotificationsService {
-  constructor(private readonly csv: CsvDatabaseService) {}
+  constructor(private readonly database: DatabaseService) {}
 
-  list(userId: string) {
-    return this.csv
-      .findAll<Notificacao>('notificacoes')
+  async list(userId: string) {
+    return (await this.database
+      .findAll<Notificacao>('notificacoes'))
       .filter((item) => item.USU_ID === userId)
       .sort((a, b) => b.NTF_DATA.localeCompare(a.NTF_DATA))
       .map((item) => this.format(item));
   }
 
-  unread(userId: string) {
-    return this.list(userId).filter((item) => !item.lida);
+  async unread(userId: string) {
+    return (await this.list(userId)).filter((item) => !item.lida);
   }
 
-  create(userId: string, titulo: string, mensagem: string) {
+  async create(userId: string, titulo: string, mensagem: string) {
     const notificacao: Notificacao = {
       NTF_ID: randomUUID(),
       USU_ID: userId,
@@ -37,7 +37,7 @@ export class NotificationsService {
       NTF_DATA: new Date().toISOString(),
     };
 
-    this.csv.append('notificacoes', notificacao);
+    await this.database.append('notificacoes', notificacao);
     return this.format(notificacao);
   }
 
@@ -49,8 +49,8 @@ export class NotificationsService {
     );
   }
 
-  markAsRead(userId: string, id: string) {
-    const rows = this.csv.findAll<Notificacao>('notificacoes');
+  async markAsRead(userId: string, id: string) {
+    const rows = await this.database.findAll<Notificacao>('notificacoes');
     const next = rows.map((item) => {
       if (item.NTF_ID === id && item.USU_ID === userId) {
         return { ...item, NTF_LIDA: '1' };
@@ -58,7 +58,7 @@ export class NotificationsService {
       return item;
     });
 
-    this.csv.saveAll('notificacoes', next);
+    await this.database.saveAll('notificacoes', next);
     return { sucesso: true };
   }
 

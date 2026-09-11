@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from './auth/auth.module';
-import { CsvDatabaseModule } from './csv-database/csv-database.module';
+import { DatabaseModule } from './database/database.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { NotificationsModule } from './notifications/notifications.module';
 
@@ -33,7 +33,7 @@ import { NotificationsModule } from './notifications/notifications.module';
       },
     }),
 
-    CsvDatabaseModule,
+    DatabaseModule,
     AuthModule,
     DashboardModule,
     NotificationsModule,

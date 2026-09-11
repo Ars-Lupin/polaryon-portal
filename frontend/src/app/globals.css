@@ -498,6 +498,11 @@ option {
   color: #0f172a;
 }
 
+html[data-theme="dark"] option {
+  color: #f5f9ff;
+  background-color: #0b1530;
+}
+
 /* =========================
    SELEÇÃO
 ========================= */

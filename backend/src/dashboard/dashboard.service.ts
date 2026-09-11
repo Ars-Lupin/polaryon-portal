@@ -1,4 +1,5 @@
 import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { randomBytes, randomUUID } from 'node:crypto';
 import { JwtPayload, Usuario } from '../auth/auth.types';
 import { PasswordService } from '../auth/password.service';
@@ -12,13 +13,8 @@ import {
   parseMfaMethods,
   validateStrongPassword,
 } from '../auth/security.utils';
-import { CsvDatabaseService } from '../csv-database/csv-database.service';
-
-type Empresa = {
-  EMP_ID: string;
-  EMP_NOME: string;
-  EMP_EMAIL: string;
-};
+import { DatabaseService } from '../database/database.service';
+import { PrismaService } from '../database/prisma.service';
 
 type Papel = {
   PAP_ID: string;
@@ -60,29 +56,92 @@ type CreatePapelInput = {
   descricao?: string;
 };
 
+export type PaginationQuery = {
+  page?: string;
+  pageSize?: string;
+  q?: string;
+};
+
+type UsuarioComPapel = Prisma.UsuarioGetPayload<{
+  include: {
+    empresaPapeis: {
+      include: {
+        papel: true;
+      };
+    };
+  };
+}>;
+
 @Injectable()
 export class DashboardService {
   constructor(
-    private readonly csv: CsvDatabaseService,
+    private readonly database: DatabaseService,
+    private readonly prisma: PrismaService,
     private readonly passwordService: PasswordService,
   ) {}
 
-  summary(user: JwtPayload) {
-    const usuariosDaEmpresa = this.getUsuariosDaEmpresa(user.empresaId);
+  async summary(user: JwtPayload) {
+    const [usuarios, empresas, papeis] = await Promise.all([
+      this.getUsuariosDaEmpresa(user.empresaId),
+      this.isAdmin(user) ? this.prisma.empresa.count() : Promise.resolve(1),
+      this.isAdmin(user) ? this.prisma.papel.count() : Promise.resolve(1),
+    ]);
 
     return {
       empresaAtual: user.empresaNome,
-      usuarios: usuariosDaEmpresa.length,
-      empresas: this.isAdmin(user) ? this.csv.findAll('empresas').length : 1,
-      papeis: this.isAdmin(user) ? this.csv.findAll('papeis').length : 1,
+      usuarios: usuarios.length,
+      empresas,
+      papeis,
       permissoes: user.permissoes.length,
     };
   }
 
-  usuarios(user: JwtPayload) {
+  async usuarios(user: JwtPayload, query: PaginationQuery = {}) {
     this.requirePermission(user, 'usuarios.ler');
 
-    return this.getUsuariosDaEmpresa(user.empresaId);
+    const { page, pageSize, search } = this.parsePagination(query);
+    const where: Prisma.UsuarioWhereInput = {
+      ativo: true,
+      empresaPapeis: {
+        some: {
+          empresaId: user.empresaId,
+        },
+      },
+    };
+
+    if (search) {
+      where.OR = [
+        { nome: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+        { usuario: { contains: search, mode: 'insensitive' } },
+        { telefone: { contains: search, mode: 'insensitive' } },
+        { cpf: { contains: search, mode: 'insensitive' } },
+        { cnpj: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [total, usuarios] = await this.prisma.$transaction([
+      this.prisma.usuario.count({ where }),
+      this.prisma.usuario.findMany({
+        where,
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        orderBy: { nome: 'asc' },
+        include: {
+          empresaPapeis: {
+            where: { empresaId: user.empresaId },
+            include: { papel: true },
+          },
+        },
+      }),
+    ]);
+
+    return {
+      data: usuarios.map((usuario) => this.mapUsuarioRecord(usuario)),
+      total,
+      page,
+      pageSize,
+    };
   }
 
   async criarUsuario(user: JwtPayload, input: CreateUsuarioInput) {
@@ -95,7 +154,9 @@ export class DashboardService {
     const cnpj = normalizeCnpj(input.cnpj);
     const usuarioLogin = normalizeUsuario(input.usuario);
     const senha = input.senha?.trim();
-    const papel = input.papelId ? this.findPapelOrFail(input.papelId) : this.findDefaultPapel();
+    const papel = input.papelId
+      ? await this.findPapelOrFail(input.papelId)
+      : await this.findDefaultPapel();
 
     if (!nome || !email || !senha || !usuarioLogin) {
       throw new BadRequestException('Nome, e-mail, usuário e senha são obrigatórios');
@@ -125,12 +186,11 @@ export class DashboardService {
       USU_DEVE_TROCAR_SENHA: '0',
     };
 
-    this.validateUniqueUserInCompany(novoUsuario, user.empresaId);
+    await this.validateUniqueUserInCompany(novoUsuario, user.empresaId);
 
-    this.csv.append('usuarios', novoUsuario);
+    await this.database.append('usuarios', novoUsuario);
 
-    this.csv.append('usuarioEmpresaPapel', {
-      UEP_ID: this.csv.nextNumericId('usuarioEmpresaPapel', 'UEP_ID'),
+    await this.database.append('usuarioEmpresaPapel', {
       USU_ID: novoUsuario.USU_ID,
       EMP_ID: user.empresaId,
       PAP_ID: papel.PAP_ID,
@@ -139,23 +199,42 @@ export class DashboardService {
     return this.mapUsuario(novoUsuario, user.empresaId);
   }
 
-  empresas(user: JwtPayload) {
+  async empresas(user: JwtPayload, query: PaginationQuery = {}) {
     this.requirePermission(user, 'empresas.ler');
 
-    const empresas = this.csv.findAll<Empresa>('empresas');
+    const { page, pageSize, search } = this.parsePagination(query);
+    const where: Prisma.EmpresaWhereInput = this.isAdmin(user) ? {} : { id: user.empresaId };
 
-    const filtradas = this.isAdmin(user)
-      ? empresas
-      : empresas.filter((empresa) => empresa.EMP_ID === user.empresaId);
+    if (search) {
+      where.OR = [
+        { nome: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+      ];
+    }
 
-    return filtradas.map((empresa) => ({
-      id: empresa.EMP_ID,
-      nome: empresa.EMP_NOME,
-      email: empresa.EMP_EMAIL,
-    }));
+    const [total, empresas] = await this.prisma.$transaction([
+      this.prisma.empresa.count({ where }),
+      this.prisma.empresa.findMany({
+        where,
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        orderBy: { nome: 'asc' },
+      }),
+    ]);
+
+    return {
+      data: empresas.map((empresa) => ({
+        id: empresa.id,
+        nome: empresa.nome,
+        email: empresa.email,
+      })),
+      total,
+      page,
+      pageSize,
+    };
   }
 
-  criarEmpresa(user: JwtPayload, input: CreateEmpresaInput) {
+  async criarEmpresa(user: JwtPayload, input: CreateEmpresaInput) {
     this.requirePermission(user, 'empresas.criar');
 
     const nome = input.nome?.trim();
@@ -171,7 +250,7 @@ export class DashboardService {
       EMP_EMAIL: email,
     };
 
-    this.csv.append('empresas', novaEmpresa);
+    await this.database.append('empresas', novaEmpresa);
 
     return {
       id: novaEmpresa.EMP_ID,
@@ -180,17 +259,17 @@ export class DashboardService {
     };
   }
 
-  papeis(user: JwtPayload) {
+  async papeis(user: JwtPayload) {
     this.requirePermission(user, 'papeis.ler');
 
-    return this.csv.findAll<Papel>('papeis').map((papel) => ({
+    return (await this.database.findAll<Papel>('papeis')).map((papel) => ({
       id: papel.PAP_ID,
       nome: papel.PAP_NOME,
       descricao: papel.PAP_DESCRICAO,
     }));
   }
 
-  criarPapel(user: JwtPayload, input: CreatePapelInput) {
+  async criarPapel(user: JwtPayload, input: CreatePapelInput) {
     this.requirePermission(user, 'papeis.criar');
 
     const nome = input.nome?.trim();
@@ -206,7 +285,7 @@ export class DashboardService {
       PAP_DESCRICAO: descricao,
     };
 
-    this.csv.append('papeis', novoPapel);
+    await this.database.append('papeis', novoPapel);
 
     return {
       id: novoPapel.PAP_ID,
@@ -215,35 +294,37 @@ export class DashboardService {
     };
   }
 
-  permissoes(user: JwtPayload) {
+  async permissoes(user: JwtPayload) {
     this.requirePermission(user, 'permissoes.ler');
 
-    return this.csv.findAll<Permissao>('permissoes').map((permissao) => ({
+    return (await this.database.findAll<Permissao>('permissoes')).map((permissao) => ({
       id: permissao.PRM_ID,
       nome: permissao.PRM_NOME,
       descricao: permissao.PRM_DESCRICAO,
     }));
   }
 
-  private getUsuariosDaEmpresa(empresaId: string) {
-    const usuarios = this.csv.findAll<Usuario>('usuarios');
-    const vinculos = this.csv.findAll<UsuarioEmpresaPapel>('usuarioEmpresaPapel');
+  private async getUsuariosDaEmpresa(empresaId: string) {
+    const usuarios = await this.database.findAll<Usuario>('usuarios');
+    const vinculos = await this.database.findAll<UsuarioEmpresaPapel>('usuarioEmpresaPapel');
 
     const idsDaEmpresa = vinculos
       .filter((vinculo) => vinculo.EMP_ID === empresaId)
       .map((vinculo) => vinculo.USU_ID);
 
-    return usuarios
-      .filter((usuario) => idsDaEmpresa.includes(usuario.USU_ID) && usuario.USU_ATIVO === '1')
-      .map((usuario) => this.mapUsuario(usuario, empresaId));
+    return Promise.all(
+      usuarios
+        .filter((usuario) => idsDaEmpresa.includes(usuario.USU_ID) && usuario.USU_ATIVO === '1')
+        .map((usuario) => this.mapUsuario(usuario, empresaId)),
+    );
   }
 
-  private mapUsuario(usuario: Usuario, empresaId: string) {
-    const vinculo = this.csv
-      .findAll<UsuarioEmpresaPapel>('usuarioEmpresaPapel')
-      .find((item) => item.USU_ID === usuario.USU_ID && item.EMP_ID === empresaId);
+  private async mapUsuario(usuario: Usuario, empresaId: string) {
+    const vinculo = (await this.database.findAll<UsuarioEmpresaPapel>('usuarioEmpresaPapel')).find(
+      (item) => item.USU_ID === usuario.USU_ID && item.EMP_ID === empresaId,
+    );
 
-    const papel = vinculo ? this.findPapelOrFail(vinculo.PAP_ID) : null;
+    const papel = vinculo ? await this.findPapelOrFail(vinculo.PAP_ID) : null;
 
     return {
       id: usuario.USU_ID,
@@ -262,9 +343,29 @@ export class DashboardService {
     };
   }
 
-  private validateUniqueUserInCompany(usuarioNovo: Usuario, empresaId: string) {
-    const usuarios = this.csv.findAll<Usuario>('usuarios');
-    const vinculos = this.csv.findAll<UsuarioEmpresaPapel>('usuarioEmpresaPapel');
+  private mapUsuarioRecord(usuario: UsuarioComPapel) {
+    const papel = usuario.empresaPapeis[0]?.papel;
+
+    return {
+      id: usuario.id,
+      nome: usuario.nome,
+      telefone: usuario.telefone,
+      cpf: usuario.cpf,
+      cnpj: usuario.cnpj,
+      usuario: usuario.usuario,
+      acesso: papel?.nome || usuario.acesso,
+      email: usuario.email,
+      ativo: usuario.ativo,
+      mfaAtivo: usuario.mfaAtivo,
+      mfaMetodos: parseMfaMethods(usuario.mfaMetodos.join('|')),
+      mfaMetodoPadrao: normalizeMfaMethod(usuario.mfaMetodoPadrao),
+      deveTrocarSenha: usuario.deveTrocarSenha,
+    };
+  }
+
+  private async validateUniqueUserInCompany(usuarioNovo: Usuario, empresaId: string) {
+    const usuarios = await this.database.findAll<Usuario>('usuarios');
+    const vinculos = await this.database.findAll<UsuarioEmpresaPapel>('usuarioEmpresaPapel');
 
     const idsDaEmpresa = vinculos
       .filter((vinculo) => vinculo.EMP_ID === empresaId)
@@ -315,8 +416,10 @@ export class DashboardService {
     return user.papelNome.toLowerCase() === 'administrador';
   }
 
-  private findPapelOrFail(papelId: string) {
-    const papel = this.csv.findAll<Papel>('papeis').find((item) => item.PAP_ID === papelId);
+  private async findPapelOrFail(papelId: string) {
+    const papel = (await this.database.findAll<Papel>('papeis')).find(
+      (item) => item.PAP_ID === papelId,
+    );
 
     if (!papel) {
       throw new BadRequestException('Papel inválido');
@@ -325,8 +428,8 @@ export class DashboardService {
     return papel;
   }
 
-  private findDefaultPapel() {
-    const papeis = this.csv.findAll<Papel>('papeis');
+  private async findDefaultPapel() {
+    const papeis = await this.database.findAll<Papel>('papeis');
     const papel = papeis.find((item) => item.PAP_NOME.toLowerCase() === 'revenda') || papeis[0];
 
     if (!papel) {
@@ -334,6 +437,17 @@ export class DashboardService {
     }
 
     return papel;
+  }
+
+  private parsePagination(query: PaginationQuery) {
+    const page = Math.max(Number(query.page) || 1, 1);
+    const requestedPageSize = Math.max(Number(query.pageSize) || 10, 1);
+
+    return {
+      page,
+      pageSize: Math.min(requestedPageSize, 50),
+      search: query.q?.trim() || '',
+    };
   }
 
   private generateTotpSecret() {

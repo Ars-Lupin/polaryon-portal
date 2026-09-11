@@ -6,6 +6,13 @@ export type Empresa = {
   email: string;
 };
 
+export type Paginated<T> = {
+  data: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+};
+
 export type Papel = {
   id: string;
   nome: string;

@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { randomUUID } from 'node:crypto';
-import { CsvDatabaseService } from '../csv-database/csv-database.service';
+import { DatabaseService } from '../database/database.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { RequestMfaDto } from './dto/request-mfa.dto';
@@ -61,16 +61,16 @@ type PapelPermissao = {
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly csv: CsvDatabaseService,
+    private readonly database: DatabaseService,
     private readonly jwtService: JwtService,
     private readonly passwordService: PasswordService,
     private readonly loginSecurity: LoginSecurityService,
     private readonly mfaService: MfaService,
   ) {}
 
-  options() {
+  async options() {
     return {
-      empresas: this.csv.findAll<Empresa>('empresas').map((empresa) => ({
+      empresas: (await this.database.findAll<Empresa>('empresas')).map((empresa) => ({
         id: empresa.EMP_ID,
         nome: empresa.EMP_NOME,
         email: empresa.EMP_EMAIL,
@@ -86,8 +86,8 @@ export class AuthService {
     }
 
     const empresaId = dto.empresaId.trim();
-    const empresa = this.findEmpresaOrFail(empresaId);
-    const papelRevenda = this.findDefaultPapel();
+    const empresa = await this.findEmpresaOrFail(empresaId);
+    const papelRevenda = await this.findDefaultPapel();
 
     const novoUsuario: Usuario = {
       USU_ID: randomUUID(),
@@ -107,18 +107,17 @@ export class AuthService {
       USU_DEVE_TROCAR_SENHA: '0',
     };
 
-    this.validateUniqueUserInCompany(novoUsuario, empresa.EMP_ID);
+    await this.validateUniqueUserInCompany(novoUsuario, empresa.EMP_ID);
 
-    this.csv.append('usuarios', novoUsuario);
+    await this.database.append('usuarios', novoUsuario);
 
-    this.csv.append('usuarioEmpresaPapel', {
-      UEP_ID: this.csv.nextNumericId('usuarioEmpresaPapel', 'UEP_ID'),
+    await this.database.append('usuarioEmpresaPapel', {
       USU_ID: novoUsuario.USU_ID,
       EMP_ID: empresa.EMP_ID,
       PAP_ID: papelRevenda.PAP_ID,
     });
 
-    this.audit({
+    await this.audit({
       evento: 'REGISTER',
       userId: novoUsuario.USU_ID,
       empresaId: empresa.EMP_ID,
@@ -137,7 +136,7 @@ export class AuthService {
     const accountKey = this.loginSecurity.buildAccountKey(empresaId, identificador);
 
     if (this.loginSecurity.isBlocked(accountKey, ip)) {
-      this.audit({
+      await this.audit({
         evento: 'LOGIN_BLOCKED',
         empresaId,
         identificador: maskIdentifier(dto.identificador),
@@ -149,14 +148,14 @@ export class AuthService {
       throw new UnauthorizedException('Credenciais inválidas ou temporariamente bloqueadas');
     }
 
-    const empresa = this.csv
-      .findAll<Empresa>('empresas')
+    const empresa = (await this.database
+      .findAll<Empresa>('empresas'))
       .find((item) => item.EMP_ID === empresaId);
 
     if (!empresa) {
       this.loginSecurity.recordFailure(accountKey, ip);
 
-      this.audit({
+      await this.audit({
         evento: 'LOGIN_FAILED',
         empresaId,
         identificador: maskIdentifier(dto.identificador),
@@ -168,12 +167,12 @@ export class AuthService {
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
-    const usuario = this.findUserByIdentifierInCompany(empresa.EMP_ID, identificador);
+    const usuario = await this.findUserByIdentifierInCompany(empresa.EMP_ID, identificador);
 
     if (!usuario) {
       this.loginSecurity.recordFailure(accountKey, ip);
 
-      this.audit({
+      await this.audit({
         evento: 'LOGIN_FAILED',
         empresaId: empresa.EMP_ID,
         identificador: maskIdentifier(dto.identificador),
@@ -190,7 +189,7 @@ export class AuthService {
     if (!passwordOk) {
       this.loginSecurity.recordFailure(accountKey, ip);
 
-      this.audit({
+      await this.audit({
         evento: 'LOGIN_FAILED',
         userId: usuario.USU_ID,
         empresaId: empresa.EMP_ID,
@@ -203,11 +202,11 @@ export class AuthService {
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
-    const vinculo = this.findVinculoOrFail(usuario.USU_ID, empresa.EMP_ID);
+    const vinculo = await this.findVinculoOrFail(usuario.USU_ID, empresa.EMP_ID);
 
     this.loginSecurity.recordSuccess(accountKey, ip);
 
-    this.audit({
+    await this.audit({
       evento: 'LOGIN_PASSWORD_OK',
       userId: usuario.USU_ID,
       empresaId: empresa.EMP_ID,
@@ -228,7 +227,7 @@ export class AuthService {
       throw new BadRequestException('Método MFA não disponível para este usuário');
     }
 
-    const usuario = this.findUsuarioAtivoOrFail(session.userId);
+    const usuario = await this.findUsuarioAtivoOrFail(session.userId);
 
     if (method === 'AUTHENTICATOR') {
       const challenge = this.loginSecurity.createMfaChallenge({
@@ -239,7 +238,7 @@ export class AuthService {
         method,
       });
 
-      this.audit({
+      await this.audit({
         evento: 'MFA_AUTHENTICATOR_REQUESTED',
         userId: usuario.USU_ID,
         empresaId: session.empresaId,
@@ -280,7 +279,7 @@ export class AuthService {
       code,
     });
 
-    this.audit({
+    await this.audit({
       evento: 'MFA_EMAIL_REQUESTED',
       userId: usuario.USU_ID,
       empresaId: session.empresaId,
@@ -303,7 +302,7 @@ export class AuthService {
 
   async verifyMfa(dto: VerifyMfaDto, ip: string) {
     const challenge = this.loginSecurity.readMfaChallengeOrThrow(dto.challengeId);
-    const usuario = this.findUsuarioAtivoOrFail(challenge.userId);
+    const usuario = await this.findUsuarioAtivoOrFail(challenge.userId);
 
     let authenticatorValid = false;
 
@@ -318,10 +317,10 @@ export class AuthService {
       authenticatorValid,
     });
 
-    this.findEmpresaOrFail(verified.empresaId);
-    this.findPapelOrFail(verified.papelId);
+    await this.findEmpresaOrFail(verified.empresaId);
+    await this.findPapelOrFail(verified.papelId);
 
-    this.audit({
+    await this.audit({
       evento: 'MFA_SUCCESS',
       userId: usuario.USU_ID,
       empresaId: verified.empresaId,
@@ -361,7 +360,7 @@ export class AuthService {
       throw new BadRequestException(senhaErrors);
     }
 
-    const usuarios = this.csv.findAll<Usuario>('usuarios');
+    const usuarios = await this.database.findAll<Usuario>('usuarios');
     const index = usuarios.findIndex(
       (usuario) => usuario.USU_ID === user.sub && usuario.USU_ATIVO === '1',
     );
@@ -378,7 +377,7 @@ export class AuthService {
     );
 
     if (!senhaAtualOk) {
-      this.audit({
+      await this.audit({
         evento: 'CHANGE_PASSWORD_FAILED',
         userId: usuario.USU_ID,
         empresaId: user.empresaId,
@@ -408,9 +407,9 @@ export class AuthService {
 
     usuarios[index] = usuarioAtualizado;
 
-    this.csv.saveAll('usuarios', usuarios);
+    await this.database.saveAll('usuarios', usuarios);
 
-    this.audit({
+    await this.audit({
       evento: 'CHANGE_PASSWORD_SUCCESS',
       userId: usuarioAtualizado.USU_ID,
       empresaId: user.empresaId,
@@ -427,14 +426,14 @@ export class AuthService {
     );
   }
 
-  profile(userId: string, empresaId: string, papelId: string) {
-    const usuario = this.findUsuarioAtivoOrFail(userId);
+  async profile(userId: string, empresaId: string, papelId: string) {
+    const usuario = await this.findUsuarioAtivoOrFail(userId);
 
     return this.sanitize(usuario, empresaId, papelId);
   }
 
-  getAuthenticatorSetup(userId: string) {
-    const usuario = this.findUsuarioAtivoOrFail(userId);
+  async getAuthenticatorSetup(userId: string) {
+    const usuario = await this.findUsuarioAtivoOrFail(userId);
 
     if (!usuario.USU_TOTP_SECRET) {
       throw new BadRequestException('Usuário sem secret configurado para authenticator');
@@ -470,7 +469,7 @@ export class AuthService {
 
     const defaultMethod = this.mfaService.getDefaultMethod(usuario);
 
-    this.audit({
+    await this.audit({
       evento: 'MFA_SESSION_CREATED',
       userId: usuario.USU_ID,
       empresaId,
@@ -495,7 +494,7 @@ export class AuthService {
   }
 
   private async buildAuthResponse(usuario: Usuario, empresaId: string, papelId: string) {
-    const usuarioSeguro = this.sanitize(usuario, empresaId, papelId);
+    const usuarioSeguro = await this.sanitize(usuario, empresaId, papelId);
 
     const payload: JwtPayload = {
       sub: usuario.USU_ID,
@@ -515,10 +514,10 @@ export class AuthService {
     };
   }
 
-  private sanitize(usuario: Usuario, empresaId: string, papelId: string) {
-    const empresa = this.findEmpresaOrFail(empresaId);
-    const papel = this.findPapelOrFail(papelId);
-    const permissoes = this.getPermissoesByPapel(papelId);
+  private async sanitize(usuario: Usuario, empresaId: string, papelId: string) {
+    const empresa = await this.findEmpresaOrFail(empresaId);
+    const papel = await this.findPapelOrFail(papelId);
+    const permissoes = await this.getPermissoesByPapel(papelId);
     const mfaMethods = this.mfaService.getAvailableMethods(usuario);
 
     return {
@@ -549,9 +548,12 @@ export class AuthService {
     };
   }
 
-  private findUserByIdentifierInCompany(empresaId: string, identificadorNormalizado: string) {
-    const usuarios = this.csv.findAll<Usuario>('usuarios');
-    const vinculos = this.csv.findAll<UsuarioEmpresaPapel>('usuarioEmpresaPapel');
+  private async findUserByIdentifierInCompany(
+    empresaId: string,
+    identificadorNormalizado: string,
+  ) {
+    const usuarios = await this.database.findAll<Usuario>('usuarios');
+    const vinculos = await this.database.findAll<UsuarioEmpresaPapel>('usuarioEmpresaPapel');
 
     const idsDaEmpresa = vinculos
       .filter((vinculo) => vinculo.EMP_ID === empresaId)
@@ -578,9 +580,9 @@ export class AuthService {
     });
   }
 
-  private validateUniqueUserInCompany(usuarioNovo: Usuario, empresaId: string) {
-    const usuarios = this.csv.findAll<Usuario>('usuarios');
-    const vinculos = this.csv.findAll<UsuarioEmpresaPapel>('usuarioEmpresaPapel');
+  private async validateUniqueUserInCompany(usuarioNovo: Usuario, empresaId: string) {
+    const usuarios = await this.database.findAll<Usuario>('usuarios');
+    const vinculos = await this.database.findAll<UsuarioEmpresaPapel>('usuarioEmpresaPapel');
 
     const idsDaEmpresa = vinculos
       .filter((vinculo) => vinculo.EMP_ID === empresaId)
@@ -621,9 +623,9 @@ export class AuthService {
     }
   }
 
-  private findUsuarioAtivoOrFail(userId: string) {
-    const usuario = this.csv
-      .findAll<Usuario>('usuarios')
+  private async findUsuarioAtivoOrFail(userId: string) {
+    const usuario = (await this.database
+      .findAll<Usuario>('usuarios'))
       .find((item) => item.USU_ID === userId && item.USU_ATIVO === '1');
 
     if (!usuario) {
@@ -633,9 +635,9 @@ export class AuthService {
     return usuario;
   }
 
-  private findEmpresaOrFail(empresaId: string) {
-    const empresa = this.csv
-      .findAll<Empresa>('empresas')
+  private async findEmpresaOrFail(empresaId: string) {
+    const empresa = (await this.database
+      .findAll<Empresa>('empresas'))
       .find((item) => item.EMP_ID === empresaId);
 
     if (!empresa) {
@@ -645,8 +647,10 @@ export class AuthService {
     return empresa;
   }
 
-  private findPapelOrFail(papelId: string) {
-    const papel = this.csv.findAll<Papel>('papeis').find((item) => item.PAP_ID === papelId);
+  private async findPapelOrFail(papelId: string) {
+    const papel = (await this.database.findAll<Papel>('papeis')).find(
+      (item) => item.PAP_ID === papelId,
+    );
 
     if (!papel) {
       throw new BadRequestException('Papel inválido');
@@ -655,8 +659,8 @@ export class AuthService {
     return papel;
   }
 
-  private findDefaultPapel() {
-    const papeis = this.csv.findAll<Papel>('papeis');
+  private async findDefaultPapel() {
+    const papeis = await this.database.findAll<Papel>('papeis');
     const papel = papeis.find((item) => item.PAP_NOME.toLowerCase() === 'revenda') || papeis[0];
 
     if (!papel) {
@@ -666,9 +670,9 @@ export class AuthService {
     return papel;
   }
 
-  private findVinculoOrFail(userId: string, empresaId: string) {
-    const vinculo = this.csv
-      .findAll<UsuarioEmpresaPapel>('usuarioEmpresaPapel')
+  private async findVinculoOrFail(userId: string, empresaId: string) {
+    const vinculo = (await this.database
+      .findAll<UsuarioEmpresaPapel>('usuarioEmpresaPapel'))
       .find((item) => item.USU_ID === userId && item.EMP_ID === empresaId);
 
     if (!vinculo) {
@@ -678,9 +682,9 @@ export class AuthService {
     return vinculo;
   }
 
-  private getPermissoesByPapel(papelId: string) {
-    const relacoes = this.csv.findAll<PapelPermissao>('papelPermissao');
-    const permissoes = this.csv.findAll<Permissao>('permissoes');
+  private async getPermissoesByPapel(papelId: string) {
+    const relacoes = await this.database.findAll<PapelPermissao>('papelPermissao');
+    const permissoes = await this.database.findAll<Permissao>('permissoes');
     const ids = relacoes.filter((item) => item.PAP_ID === papelId).map((item) => item.PRM_ID);
 
     return permissoes
@@ -688,7 +692,7 @@ export class AuthService {
       .map((item) => item.PRM_NOME);
   }
 
-  private audit(params: {
+  private async audit(params: {
     evento: string;
     userId?: string;
     empresaId?: string;
@@ -698,7 +702,7 @@ export class AuthService {
     mensagem: string;
   }) {
     try {
-      this.csv.append('authLogs', {
+      await this.database.append('authLogs', {
         LOG_ID: randomUUID(),
         LOG_DATA: new Date().toISOString(),
         LOG_EVENTO: params.evento,
@@ -710,7 +714,7 @@ export class AuthService {
         MENSAGEM: params.mensagem,
       });
     } catch {
-      // Não derruba o login se o CSV de log ainda não existir.
+      // Não derruba a autenticação se o log falhar.
     }
   }
 }

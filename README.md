@@ -1,6 +1,6 @@
 # Polaryon — Portal de Parceiros
 
-Portal multi-empresa (white-label) para gestão de acesso de parceiros: usuários, papéis e permissões, com autenticação em duas etapas e tema visual por empresa.
+Portal multi-empresa (white-label) para gestão de acesso de parceiros: usuários, papéis e permissões, com autenticação em duas etapas, tema visual por empresa e persistência em Postgres.
 
 Projeto full-stack construído para praticar arquitetura de autenticação/autorização "de verdade" (rate limiting, MFA, RBAC) além do CRUD básico.
 
@@ -9,11 +9,13 @@ Projeto full-stack construído para praticar arquitetura de autenticação/autor
 **Frontend**
 - Next.js 15 (App Router) + React 19 + TypeScript (`strict`)
 - Tailwind CSS, com sistema de temas via CSS custom properties (claro/escuro + cor por empresa)
+- Listagens com busca, paginação e consumo paginado da API
 
 **Backend**
 - NestJS 11 + TypeScript
 - Autenticação JWT, validação de DTOs com `class-validator`
-- Persistência em arquivos CSV (ver [Limitações conhecidas](#limitações-conhecidas--próximos-passos))
+- Postgres + Prisma ORM
+- Docker Compose para subir banco, backend e frontend juntos
 
 ## Principais funcionalidades
 
@@ -22,6 +24,7 @@ Projeto full-stack construído para praticar arquitetura de autenticação/autor
 - **Senhas com `scrypt`**: hash com salt aleatório e comparação em tempo constante (`timingSafeEqual`), evitando timing attacks.
 - **RBAC (controle de acesso por permissão)**: usuários têm um papel por empresa, papéis agregam permissões (`usuarios.ler`, `empresas.criar` etc.), checadas tanto no backend (guards) quanto no frontend (menu e rotas).
 - **Multi-empresa com tema white-label**: cada empresa (Macroex, Actus, Kamell, Atmos, Tohatsu) tem sua própria paleta de cores aplicada automaticamente no cabeçalho, rodapé e destaques.
+- **Busca e paginação** nas listagens de usuários e empresas.
 - **Tema claro/escuro** persistente por usuário.
 - **Política de senha forte** com bloqueio de senhas comuns.
 
@@ -29,42 +32,60 @@ Projeto full-stack construído para praticar arquitetura de autenticação/autor
 
 ```
 polaryon-portal/
+├── docker-compose.yml
 ├── frontend/   Next.js (App Router)
 │   └── src/
 │       ├── app/            rotas (login, cadastro, dashboard/*)
-│       ├── components/     AppShell, DataTable, formulários, etc.
+│       ├── components/     AppShell, DataTable, Pagination, formulários, etc.
 │       ├── contexts/       Auth, Theme, Notification
 │       └── lib/            cliente HTTP (api.ts)
 ├── backend/    NestJS
+│   ├── prisma/             schema, migrations e seed demo
 │   └── src/
 │       ├── auth/           login, MFA, rate limiting, hashing
-│       ├── dashboard/      resumo do dashboard
-│       ├── notifications/  notificações do usuário
-│       └── csv-database/   camada de persistência em CSV
+│       ├── dashboard/      resumo e listagens paginadas
+│       ├── database/       PrismaService + adaptador de persistência
+│       └── notifications/  notificações do usuário
 └── docs/
 ```
 
 ## Como rodar localmente
 
-Pré-requisitos: Node.js 20+.
+Pré-requisitos: Node.js 20+ e Docker.
 
-### 1. Backend
+### Opção rápida: Docker Compose
+
+```bash
+docker compose up --build
+```
+
+Serviços:
+- Frontend: `http://localhost:3050`
+- Backend: `http://localhost:3333`
+- Postgres: `localhost:5432`
+
+O backend aplica as migrations e executa o seed demo ao subir.
+
+### Opção manual
+
+Suba o banco:
+
+```bash
+docker compose up -d db
+```
+
+Configure e rode o backend:
 
 ```bash
 cd backend
 npm install
 cp .env.example .env
-```
-
-Edite `backend/.env` e gere valores próprios para `JWT_SECRET` e `MFA_CODE_SECRET` (ex: `openssl rand -base64 32`). O envio de código MFA por e-mail (`SMTP_*`) só é necessário se você for testar o método **E-mail**; para testar sem configurar SMTP, use o método **Aplicativo autenticador (TOTP)** — o usuário semeado abaixo já vem com um segredo TOTP configurado.
-
-```bash
+npx prisma migrate dev --name init
+npx prisma db seed
 npm run start:dev
 ```
 
-O backend sobe em `http://localhost:3333` e, na primeira execução, cria a pasta `backend/data/` com os CSVs (incluindo um usuário administrador semeado por empresa).
-
-### 2. Frontend
+Configure e rode o frontend em outro terminal:
 
 ```bash
 cd frontend
@@ -73,20 +94,21 @@ cp .env.example .env
 npm run dev
 ```
 
-O frontend sobe em `http://localhost:3050`.
-
 ### Usuário semeado
 
 - Empresa: **Macroex**
 - Usuário: `admin_macroex`
-- MFA: e-mail (padrão) ou aplicativo autenticador (segredo já semeado em `CsvDatabaseService`)
-- A senha do seed não fica em texto plano no código-fonte (só o hash `scrypt`) — defina a sua própria editando o seed em `backend/src/csv-database/csv-database.service.ts` e gerando um novo hash com `PasswordService.hash(...)`, ou apague `backend/data/` para recriar o seed do zero após ajustar o código.
+- Senha inicial: `Admin@123456` (já vem pré-preenchida no formulário de login, só para facilitar testar o demo)
+- MFA: e-mail (padrão) ou aplicativo autenticador
+- Segredo TOTP semeado: `JBSWY3DPEHPK3PXP`
+
+No primeiro login, o portal exige a troca dessa senha inicial antes de liberar o acesso ao dashboard (é o comportamento normal do seed, `deveTrocarSenha: true`). Para trocar a senha inicial do demo, gere um novo hash com `PasswordService.hash(...)`, atualize `adminPasswordHash` em `backend/prisma/seed.ts` e rode `npx prisma db seed` novamente.
 
 ## Limitações conhecidas / próximos passos
 
-Este projeto prioriza mostrar arquitetura de autenticação/autorização; alguns pontos ficaram propositalmente simplificados:
+Este projeto prioriza mostrar arquitetura de autenticação/autorização; alguns pontos seguem propositalmente simplificados:
 
-- **Persistência em CSV** (`CsvDatabaseService`) em vez de um banco de dados real — funciona bem para demonstração, mas não é pensado para concorrência ou volume. Próximo passo natural: migrar para Postgres/SQLite via Prisma ou TypeORM, mantendo a mesma interface de serviço.
 - **Rate limiting e sessões de MFA em memória** (`Map` no processo) — reiniciar o backend limpa bloqueios e desafios pendentes; para múltiplas instâncias, migraria para Redis.
-- **Sem testes automatizados ainda** — é o próximo item da lista, começando pelo `PasswordService` e pelo `LoginSecurityService`.
+- **Paginação já existe em usuários e empresas**; papéis e permissões ainda são listas simples porque o volume demo é pequeno.
+- **Sem testes automatizados ainda** — é o próximo item da lista, começando pelo `PasswordService`, pelo `LoginSecurityService` e pelas consultas paginadas.
 - **Sem CI configurado** — pendente até a primeira versão versionada no Git.

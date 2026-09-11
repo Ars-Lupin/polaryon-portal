@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Empresa {
+  id            String                @id @map("EMP_ID")
+  nome          String                @map("EMP_NOME")
+  email         String                @default("") @map("EMP_EMAIL")
+  usuarioPapeis UsuarioEmpresaPapel[]
+  authLogs      AuthLog[]
+
+  @@map("ACESSO_EMPRESA")
+}
+
+model Papel {
+  id            String                @id @map("PAP_ID")
+  nome          String                @map("PAP_NOME")
+  descricao     String                @default("") @map("PAP_DESCRICAO")
+  usuarioPapeis UsuarioEmpresaPapel[]
+  permissoes    PapelPermissao[]
+
+  @@map("ACESSO_PAPEL")
+}
+
+model Permissao {
+  id        String           @id @map("PRM_ID")
+  nome      String           @unique @map("PRM_NOME")
+  descricao String           @default("") @map("PRM_DESCRICAO")
+  papeis    PapelPermissao[]
+
+  @@map("ACESSO_PERMISSAO")
+}
+
+model PapelPermissao {
+  id          Int       @id @default(autoincrement()) @map("PPE_ID")
+  permissaoId String    @map("PRM_ID")
+  papelId     String    @map("PAP_ID")
+  permissao   Permissao @relation(fields: [permissaoId], references: [id], onDelete: Cascade)
+  papel       Papel     @relation(fields: [papelId], references: [id], onDelete: Cascade)
+
+  @@unique([permissaoId, papelId])
+  @@map("ACESSO_PAP_PRM")
+}
+
+model Usuario {
+  id              String                @id @map("USU_ID")
+  nome            String                @map("USU_NOME")
+  telefone        String                @default("") @map("USU_TELEFONE")
+  cpf             String                @default("") @map("USU_CPF")
+  cnpj            String                @default("") @map("USU_CNPJ")
+  usuario         String                @default("") @map("USU_USUARIO")
+  acesso          String                @map("USU_ACESSO")
+  email           String                @map("USU_EMAIL")
+  senhaHash       String                @map("USU_SENHA_HASH")
+  ativo           Boolean               @default(true) @map("USU_ATIVO")
+  mfaAtivo        Boolean               @default(true) @map("USU_MFA_ATIVO")
+  mfaMetodos      String[]              @default(["EMAIL", "AUTHENTICATOR"]) @map("USU_MFA_METODOS")
+  mfaMetodoPadrao String                @default("EMAIL") @map("USU_MFA_METODO_PADRAO")
+  totpSecret      String                @default("") @map("USU_TOTP_SECRET")
+  deveTrocarSenha Boolean               @default(false) @map("USU_DEVE_TROCAR_SENHA")
+  empresaPapeis   UsuarioEmpresaPapel[]
+  notificacoes    Notificacao[]
+  authLogs        AuthLog[]
+
+  @@map("ACESSO_USUARIO")
+}
+
+model UsuarioEmpresaPapel {
+  id        Int     @id @default(autoincrement()) @map("UEP_ID")
+  usuarioId String  @map("USU_ID")
+  empresaId String  @map("EMP_ID")
+  papelId   String  @map("PAP_ID")
+  usuario   Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  empresa   Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  papel     Papel   @relation(fields: [papelId], references: [id], onDelete: Cascade)
+
+  @@unique([usuarioId, empresaId])
+  @@map("ACESSO_USU_EMP_PAP")
+}
+
+model Notificacao {
+  id        String   @id @map("NTF_ID")
+  usuarioId String   @map("USU_ID")
+  titulo    String   @map("NTF_TITULO")
+  mensagem  String   @map("NTF_MENSAGEM")
+  lida      Boolean  @default(false) @map("NTF_LIDA")
+  data      DateTime @map("NTF_DATA")
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@map("NOTIFICACAO")
+}
+
+model AuthLog {
+  id            String   @id @map("LOG_ID")
+  data          DateTime @map("LOG_DATA")
+  evento        String   @map("LOG_EVENTO")
+  usuarioId     String?  @map("USU_ID")
+  empresaId     String?  @map("EMP_ID")
+  identificador String   @default("") @map("IDENTIFICADOR")
+  ip            String   @default("") @map("IP")
+  sucesso       Boolean  @map("SUCESSO")
+  mensagem      String   @default("") @map("MENSAGEM")
+  usuario       Usuario? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  empresa       Empresa? @relation(fields: [empresaId], references: [id], onDelete: SetNull)
+
+  @@map("ACESSO_AUTH_LOG")
+}

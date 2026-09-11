@@ -14,9 +14,6 @@ backend/tsconfig.tsbuildinfo
 .env.*
 !.env.example
 
-# "Banco de dados" em CSV (dados de execução local, incluindo hash de senha do admin seed)
-backend/data/
-
 # Logs
 *.log
 npm-debug.log*
